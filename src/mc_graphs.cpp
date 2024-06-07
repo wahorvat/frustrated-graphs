@@ -1,57 +1,47 @@
 #include <iostream>
 #include <vector>
-#include <random>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
-// Declare the prototype for mc_complete_coloring
-void mc_complete_coloring(vector<vector<int> >& adjacencyMatrix, int numVertices, double edgeProbability, mt19937& gen, uniform_real_distribution<>& dis);
+/*
+Generate Erdos-Renyi graph with p(+1/red edge) = 0.5, remaining possible edges are -1/blue.
+Final dual adjacency matrix is that of a random complete graph with maximum disorder
+*/
 
-vector<vector<int> > generateRandomGraph(int numVertices, double edgeProbability) {
-    vector<vector<int> > adjacencyMatrix(numVertices, vector<int>(numVertices, -1));
-    random_device rd;
-    mt19937 gen(rd());
-    uniform_real_distribution<> dis(0.0, 1.0);
+vector<vector<int>> generateRandomGraph(int Nodes, double redProb) {
+    // Set the seed for random number generation
+    srand(time(NULL));
 
-    for (int i = 0; i < numVertices; i++) {
-        adjacencyMatrix[i][i] = 0; // Set diagonal elements to 0 (no self-loops)
-    }
+    // Number of nodes
+    int n = Nodes;
 
-    mc_complete_coloring(adjacencyMatrix, numVertices, edgeProbability, gen, dis);
+    // Initialize the dual adjacency matrix with -1 = blue
+    vector<vector<int> > adj_matrix(n, vector<int>(n, -1));
 
-    return adjacencyMatrix;
-}
+    // Generate the adjacency matrix using Monte Carlo method
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            // Generate a random number between 0 and 1
+            double random_num = static_cast<double>(rand()) / RAND_MAX;
 
-void mc_complete_coloring(vector<vector<int> >& adjacencyMatrix, int numVertices, double edgeProbability, mt19937& gen, uniform_real_distribution<>& dis) {
-    for (int i = 0; i < numVertices; i++) {
-        for (int j = i + 1; j < numVertices; j++) {
-            double randomValue = dis(gen);
-            if (randomValue <= edgeProbability) {
-                adjacencyMatrix[i][j] = 1;
-                adjacencyMatrix[j][i] = 1; // Undirected graph
+            // If the random number is less than 0.5, set the edge to 1 = red
+            if (random_num < redProb) {
+                adj_matrix[i][j] = 1;
+                adj_matrix[j][i] = 1;
             }
         }
     }
-}
 
-void printAdjacencyMatrix(const vector<vector<int> >& adjacencyMatrix) {
-    int numVertices = adjacencyMatrix.size();
-    for (int i = 0; i < numVertices; i++) {
-        for (int j = 0; j < numVertices; j++) {
-            cout << adjacencyMatrix[i][j] << " ";
+    // Print dual adjacency matrix
+    cout << "Adjacency Matrix:" << endl;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            cout << adj_matrix[i][j] << " ";
         }
         cout << endl;
     }
-}
 
-int main() {
-    int numVertices = 10;
-    double edgeProbability = 0.5;
-
-    vector<vector<int> > adjacencyMatrix = generateRandomGraph(numVertices, edgeProbability);
-
-    cout << "Adjacency Matrix:" << endl;
-    printAdjacencyMatrix(adjacencyMatrix);
-
-    return 0;
+    return adj_matrix;
 }
