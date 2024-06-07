@@ -7,7 +7,7 @@ vector<int> countCliques(const vector<vector<int>>& adjacencyMatrix) {
     int numVertices = adjacencyMatrix.size();
     vector<int> cliqueCounts(numVertices + 1, 0);
 
-    // Implement your clique counting algorithm here
+    // clique counting algorithm
     // ...
 
     // Print the clique counts
