@@ -10,7 +10,7 @@ using namespace std;
 
 
 vector<double> EstimateCliqueDistribution(int N, int num_samples, double edge_probability, int clique_size) {
-    vector<double> cliqueDistribution;
+    vector<double> clique_distribution;
 
         for (int i = 0; i < num_samples; i++) {
             double red_clique_counts;
@@ -26,12 +26,12 @@ vector<double> EstimateCliqueDistribution(int N, int num_samples, double edge_pr
                 blue_clique_counts += 1;
             }
 
-            cliqueDistribution[i] += red_clique_counts + blue_clique_counts;
+            clique_distribution[i] += red_clique_counts + blue_clique_counts;
 
             visited.clear(); // Clear the visited set for the next iteration
         }
 
-    return cliqueDistribution;
+    return clique_distribution;
 }
 
 int main() {
