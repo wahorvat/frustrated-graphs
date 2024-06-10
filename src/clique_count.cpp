@@ -9,24 +9,24 @@
 using namespace std;
 
 
-vector<double> estimateCliqueDistribution(int N, int numSamples, double edgeProbability, int cliqueSize) {
+vector<double> EstimateCliqueDistribution(int N, int num_samples, double edge_probability, int clique_size) {
     vector<double> cliqueDistribution;
 
-        for (int i = 0; i < numSamples; i++) {
-            double redCliqueCounts;
-            double blueCliqueCounts;
-            vector<vector<int>> adjacencyMatrix = generateRandomGraph(N, edgeProbability);
+        for (int i = 0; i < num_samples; i++) {
+            double red_clique_counts;
+            double blue_clique_counts;
+            vector<vector<int>> adjacency_matrix = GenerateRandomGraph(N, edge_probability);
             unordered_set<int> visited;
 
-            if (hasClique(adjacencyMatrix, 1, cliqueSize, 1, visited) == true){
-                redCliqueCounts += 1;
+            if (HasClique(adjacency_matrix, 1, clique_size, 1, visited) == true){
+                red_clique_counts += 1;
             }
         
-            if (hasClique(adjacencyMatrix, 1, cliqueSize, -1, visited) == 1){
-                blueCliqueCounts += 1;
+            if (HasClique(adjacency_matrix, 1, clique_size, -1, visited) == 1){
+                blue_clique_counts += 1;
             }
 
-            cliqueDistribution[i] += redCliqueCounts + blueCliqueCounts;
+            cliqueDistribution[i] += red_clique_counts + blue_clique_counts;
 
             visited.clear(); // Clear the visited set for the next iteration
         }
@@ -36,17 +36,17 @@ vector<double> estimateCliqueDistribution(int N, int numSamples, double edgeProb
 
 int main() {
     int N = 5; // Graph size
-    int numSamples = 100; // Number of Monte Carlo samples
-    double edgeProbability = 0.5; // Edge probability
-    int cliqueSize = 3; 
+    int num_samples = 100; // Number of Monte Carlo samples
+    double edge_probability = 0.5; // Edge probability
+    int clique_size = 3; 
 
-    vector<double> cliqueDistribution = estimateCliqueDistribution(N, numSamples, edgeProbability, cliqueSize);
+    vector<double> clique_distribution = EstimateCliqueDistribution(N, num_samples, edge_probability, clique_size);
 
-    double cliqueSum = accumulate(cliqueDistribution.begin(), cliqueDistribution.end(), 0.0);
-    double cliqueAvg = cliqueSum / cliqueDistribution.size();
+    double clique_sum = accumulate(clique_distribution.begin(), clique_distribution.end(), 0.0);
+    double clique_avg = clique_sum / clique_distribution.size();
 
     cout << "Estimated clique distribution for a graph of size " << N << ":" << endl;
-    cout << cliqueAvg << endl;
+    cout << clique_avg << endl;
 
     return 0;
 }
