@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <fstream>
 #include "mc_graphs.cpp"  // Include the existing file
 
 class CliqueDetector {
@@ -59,84 +60,68 @@ public:
 };
 
 int main() {
-    int N, numSamples, cliqueSize;
+    int startN, endN, numSamples, cliqueSize;
     double redPercent;
 
     // Get user input
-    std::cout << "Enter the size of the graph (N): ";
-    std::cin >> N;
-    
+    std::cout << "Enter the starting graph size (N): ";
+    std::cin >> startN;
+    std::cout << "Enter the ending graph size (M): ";
+    std::cin >> endN;
     std::cout << "Enter the percentage of red edges (0-100): ";
     std::cin >> redPercent;
-
-    std::cout << "Enter the number of samples to generate: ";
+    std::cout << "Enter the number of samples per size: ";
     std::cin >> numSamples;
-
     std::cout << "Enter the clique size to search for: ";
     std::cin >> cliqueSize;
     
     // Validate input
-    if (N < 1 || redPercent < 0 || redPercent > 100 || numSamples < 1 || cliqueSize > N) {
+    if (startN < 1 || endN < startN || redPercent < 0 || redPercent > 100 || 
+        numSamples < 1 || cliqueSize > startN) {
         std::cout << "Invalid input parameters!" << std::endl;
         return 1;
     }
 
-    // Initialize counters for statistics
-    int redCliqueCount = 0;
-    int blueCliqueCount = 0;
-    int bothCliqueCount = 0;
-    int noCliqueCount = 0;
+    // Open output file
+    std::ofstream outFile("clique_analysis.csv");
+    outFile << "graph_size,total_samples,has_clique,no_clique\n";
 
-    // Create the generator using the imported class
-    ColoredGraphGenerator generator(N, redPercent);
-    
-    // Generate and analyze samples
-    for (int i = 1; i <= numSamples; i++) {
-        std::cout << "\nAnalyzing sample " << i << "..." << std::endl;
+    // For each graph size
+    for (int currentN = startN; currentN <= endN; currentN++) {
+        std::cout << "\nAnalyzing graphs of size " << currentN << "..." << std::endl;
         
-        // Generate new graph using imported generator
-        auto adjacencyMatrix = generator.generateGraph();
+        int hasCliqueCount = 0;
+        int noCliqueCount = 0;
+
+        ColoredGraphGenerator generator(currentN, redPercent);
         
-        // Use imported methods to print and analyze the graph
-        generator.printMatrix(adjacencyMatrix, i);
-        generator.calculateStats(adjacencyMatrix);
-        
-        // Create clique detector and analyze
-        CliqueDetector detector(adjacencyMatrix, cliqueSize);
-        auto [hasRed, hasBlue] = detector.findCliques();
-        
-        // Update statistics
-        if (hasRed && hasBlue) {
-            bothCliqueCount++;
-            std::cout << "Found both red and blue cliques of size " << cliqueSize << std::endl;
-        } else if (hasRed) {
-            redCliqueCount++;
-            std::cout << "Found red clique of size " << cliqueSize << std::endl;
-        } else if (hasBlue) {
-            blueCliqueCount++;
-            std::cout << "Found blue clique of size " << cliqueSize << std::endl;
-        } else {
-            noCliqueCount++;
-            std::cout << "No monochromatic cliques of size " << cliqueSize << " found" << std::endl;
+        // Generate and analyze samples
+        for (int i = 1; i <= numSamples; i++) {
+            auto adjacencyMatrix = generator.generateGraph();
+            CliqueDetector detector(adjacencyMatrix, cliqueSize);
+            auto [hasRed, hasBlue] = detector.findCliques();
+            
+            if (hasRed || hasBlue) {
+                hasCliqueCount++;
+            } else {
+                noCliqueCount++;
+            }
+            
+            if (i % 10 == 0) {
+                std::cout << "Processed " << i << "/" << numSamples << " samples\r" << std::flush;
+            }
         }
         
-        std::cout << std::string(50, '-') << std::endl;  // Separator line
+        // Write results to file
+        outFile << currentN << "," << numSamples << "," 
+                << hasCliqueCount << "," << noCliqueCount << "\n";
+        
+        std::cout << "\nCompleted analysis for size " << currentN << std::endl;
+        std::cout << "Has clique: " << hasCliqueCount << ", No clique: " << noCliqueCount << std::endl;
     }
 
-    // Print final statistics
-    std::cout << "\nFinal Statistics for " << numSamples << " samples:" << std::endl;
-    std::cout << "Graph size: " << N << std::endl;
-    std::cout << "Red edge percentage: " << redPercent << "%" << std::endl;
-    std::cout << "Clique size searched: " << cliqueSize << std::endl;
-    std::cout << "----------------------------------------" << std::endl;
-    std::cout << "Samples with only red cliques: " << redCliqueCount 
-              << " (" << (100.0 * redCliqueCount / numSamples) << "%)" << std::endl;
-    std::cout << "Samples with only blue cliques: " << blueCliqueCount 
-              << " (" << (100.0 * blueCliqueCount / numSamples) << "%)" << std::endl;
-    std::cout << "Samples with both colored cliques: " << bothCliqueCount 
-              << " (" << (100.0 * bothCliqueCount / numSamples) << "%)" << std::endl;
-    std::cout << "Samples with no cliques: " << noCliqueCount 
-              << " (" << (100.0 * noCliqueCount / numSamples) << "%)" << std::endl;
+    outFile.close();
+    std::cout << "\nResults have been written to clique_analysis.csv" << std::endl;
 
     return 0;
 }
