@@ -1,53 +1,86 @@
 #include <iostream>
 #include <vector>
-#include <cstdlib>
-#include <ctime>
+#include <random>
+#include <chrono>
+#include <iomanip>
 
-using namespace std;
+class ColoredGraphGenerator {
+private:
+    int N; // graph size
+    double redPercentage; // percentage of red edges
+    std::mt19937 rng;
 
-/*
-Generate Erdos-Renyi graph with p(+1 (red)) = 0.5, remaining possible edges are -1 (blue).
-Final dual adjacency matrix is that of a random complete graph with maximum disorder
-*/
-
-vector<vector<int> > GenerateRandomGraph(int nodes, double red_prob) {
-    // Set the seed for random number generation
-    srand(time(NULL));
-
-    // Number of nodes
-    int n = nodes;
-
-    // Initialize the dual adjacency matrix with -1 (blue)
-    vector<vector<int> > adj_matrix(n, vector<int>(n, -1));
-
-    // Generate the adjacency matrix using Monte Carlo method
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            if (i == j) {
-                // Set the diagonal elements to 0
-                adj_matrix[i][j] = 0;
-            } else {
-                // Generate a random number between 0 and 1
-                double random_num = static_cast<double>(rand()) / RAND_MAX;
-
-                // If the random number is less than redProb, set the edge to 1 = red
-                if (random_num < red_prob) {
-                    adj_matrix[i][j] = 1;
-                    adj_matrix[j][i] = 1;
-                }
-            }
-        }
+public:
+    ColoredGraphGenerator(int size, double red_percent) 
+        : N(size), redPercentage(red_percent) {
+        // Initialize random number generator with current time
+        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+        rng = std::mt19937(seed);
     }
 
-    // Print dual adjacency matrix
-    // cout << "Adjacency Matrix:" << endl;
-    // for (int i = 0; i < n; i++) {
-    //     for (int j = 0; j < n; j++) {
-    //         cout << adj_matrix[i][j] << " ";
-    //     }
-    //     cout << endl;
-    // }
+    std::vector<std::vector<int>> generateGraph() {
+        // Initialize adjacency matrix with zeros
+        std::vector<std::vector<int>> adjacencyMatrix(N, std::vector<int>(N, 0));
+        
+        // Create distribution for edge coloring
+        std::uniform_real_distribution<double> dist(0.0, 1.0);
+        
+        // Fill the adjacency matrix
+        for (int i = 0; i < N; i++) {
+            for (int j = i + 1; j < N; j++) {
+                // Randomly assign color based on probability
+                double random_value = dist(rng);
+                int color = (random_value < redPercentage/100.0) ? 1 : -1;
+                
+                // Set symmetric entries in adjacency matrix
+                adjacencyMatrix[i][j] = color;
+                adjacencyMatrix[j][i] = color;
+            }
+        }
+        
+        return adjacencyMatrix;
+    }
 
-    return adj_matrix;
+    void printMatrix(const std::vector<std::vector<int>>& matrix) {
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                std::cout << std::setw(3) << matrix[i][j] << " ";
+            }
+            std::cout << std::endl;
+        }
+    }
+};
+
+int main() {
+    int N;
+    double redPercent, bluePercent;
+
+    // Get user input
+    std::cout << "Enter the size of the graph (N): ";
+    std::cin >> N;
+    
+    std::cout << "Enter the percentage of red edges (0-100): ";
+    std::cin >> redPercent;
+    
+    bluePercent = 100 - redPercent;
+    
+    // Validate input
+    if (N < 1 || redPercent < 0 || redPercent > 100) {
+        std::cout << "Invalid input parameters!" << std::endl;
+        return 1;
+    }
+
+    std::cout << "\nGenerating complete graph with:" << std::endl;
+    std::cout << "Size: " << N << std::endl;
+    std::cout << "Red edges: " << redPercent << "%" << std::endl;
+    std::cout << "Blue edges: " << bluePercent << "%" << std::endl;
+
+    // Create and use the generator
+    ColoredGraphGenerator generator(N, redPercent);
+    auto adjacencyMatrix = generator.generateGraph();
+    
+    std::cout << "\nAdjacency Matrix (1 = Red, -1 = Blue):" << std::endl;
+    generator.printMatrix(adjacencyMatrix);
+
+    return 0;
 }
-
